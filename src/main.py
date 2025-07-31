@@ -1,47 +1,68 @@
-from ursina import Ursina, Button, color, Sky, scene, destroy, mouse, application, Entity, camera, Text
+# type: ignore
+
+from perlin_noise import PerlinNoise
+from ursina import (
+    Button,
+    DirectionalLight,
+    Entity,
+    Sky,
+    Text,
+    Ursina,
+    Vec3,
+    application,
+    camera,
+    color,
+    destroy,
+    load_texture,
+    mouse,
+    scene,
+)
 from ursina.prefabs.first_person_controller import FirstPersonController
 
 app = Ursina(title="Minecraft-py")
-player = FirstPersonController()
-Sky(texture="sky.png")
 
+# Terrain config
+noise = PerlinNoise(octaves=4, seed=2025)
+terrain_width = 50
+terrain_depth = 50
+height_scale = 8
+textures = ["grass.png", "glass.png", "stone.png", "iron_stone.png", "earth_bottom.png"]
+selected_texture = textures[0]
 boxes = []
 
-def generate_terrain(config):
-    for i in range(config["axis"]["y"]):
-        for j in range(config["axis"]["x"]):
+
+def generate_terrain():
+    for z in range(terrain_depth):
+        for x in range(terrain_width):
+            y = round(noise([x / terrain_width, z / terrain_depth]) * height_scale)
             box = Button(
-                color=color.white,  
                 model="cube",
-                position=(j, 0, i),
-                texture=f"textures/{config["texture"]}",
+                texture=load_texture(f"textures/{textures[0]}"),
+                color=color.white,
+                position=(x, y, z),
                 parent=scene,
                 origin_y=0.5,
             )
             boxes.append(box)
 
 
-textures = ["grass.png", "glass.png", "stone.png", "iron_stone.png", "earth_bottom.png"]
-selected_texture = textures[0]
-
 texture_display = Entity(
     parent=camera.ui,
-    model='quad',
-    texture=f'textures/{selected_texture}',
+    model="quad",
+    texture=load_texture(f"textures/{selected_texture}"),
     scale=(0.1, 0.1),
-    position=(-0.83, 0.44)
+    position=(-0.83, 0.44),
 )
-
 
 
 highlight_border = Entity(
     parent=camera.ui,
-    model='quad',
+    model="quad",
     color=color.white33,
     scale=(0.09, 0.09),
     position=(0, -0.45),
     enabled=True,
-    z=-0.5
+    z=-0.5,
 )
 
 # Texture Options
@@ -52,10 +73,10 @@ for i, texture_name in enumerate(textures):
     x = start_x + i * spacing
     icon = Entity(
         parent=camera.ui,
-        model='quad',
-        texture=f'textures/{texture_name}',
+        model="quad",
+        texture=load_texture(f"textures/{texture_name}"),
         scale=(0.08, 0.08),
-        position=(x, -0.45)
+        position=(x, -0.45),
     )
     number_label = Text(
         text=str(i + 1),
@@ -63,23 +84,25 @@ for i, texture_name in enumerate(textures):
         origin=(0, 0),
         position=(x, -0.53),
         scale=1.5,
-        color=color.white
+        color=color.white,
     )
     texture_options_ui.append((icon, number_label))
 
 highlight_border.position = texture_options_ui[0][0].position
+
+
 def handle_texture_selection(key):
     global selected_texture
     if key.isdigit():
         index = int(key) - 1
         if 0 <= index < len(textures):
             selected_texture = textures[index]
-            texture_display.texture = f'textures/{selected_texture}'
+            texture_display.texture = load_texture(f"textures/{selected_texture}")
             highlight_border.position = texture_options_ui[index][0].position
 
 
 def input(key):
-    if key == 'escape':
+    if key == "escape":
         application.quit()
         return
 
@@ -92,7 +115,7 @@ def input(key):
                     color=color.white,
                     model="cube",
                     position=box.position + mouse.normal,
-                    texture=f"textures/{selected_texture}",
+                    texture=load_texture(f"textures/{selected_texture}"),
                     parent=scene,
                     origin_y=0.5,
                 )
@@ -103,9 +126,18 @@ def input(key):
                 destroy(box)
 
 
-config = {
-    "texture": "grass.png",
-    "axis": {"y": 10, "x": 10}
-}
-generate_terrain(config)
+player = FirstPersonController()
+initial_position = (terrain_width // 2, height_scale + 5, terrain_depth // 2)
+player.position = initial_position
+
+
+def update():
+    if player.y < -30:
+        player.position = initial_position
+        player.velocity = Vec3(0, 0, 0)
+
+
+DirectionalLight().look_at(Vec3(1, -1, -1))
+generate_terrain()
+Sky(texture="sky.png")
 app.run()

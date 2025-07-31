@@ -5,5 +5,9 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "perlin-noise>=1.14",
     "ursina>=8.0.1",
 ]
+
+[tool.uv]
+package = true
