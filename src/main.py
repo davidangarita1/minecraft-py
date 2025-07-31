@@ -1,5 +1,7 @@
 # type: ignore
 
+import time
+
 from perlin_noise import PerlinNoise
 from ursina import (
     Button,
@@ -16,6 +18,7 @@ from ursina import (
     load_texture,
     mouse,
     scene,
+    held_keys,
 )
 from ursina.prefabs.first_person_controller import FirstPersonController
 
@@ -30,6 +33,8 @@ textures = ["grass.png", "glass.png", "stone.png", "iron_stone.png", "earth_bott
 texture_map = {name: load_texture(f"textures/{name}") for name in textures}
 selected_texture = textures[0]
 boxes = []
+creative_mode = False
+last_space_press = 0
 
 
 def generate_terrain():
@@ -51,22 +56,22 @@ def generate_terrain():
             )
             boxes.append(top_block)
 
-            for y in range(surface_y - 1, -16, -1):
+            for y in range(surface_y - 1, -11, -1):
                 if y >= surface_y - 3:
                     tex = texture_map[textures[4]]
                 else:
                     tex = texture_map[textures[2]]
 
-                Entity(
-                    model="cube",
-                    texture=tex,
-                    position=(x, y, z),
-                    parent=ground_parent,
-                    origin_y=0.5,
-                    collider=None,
+                boxes.append(
+                    Button(
+                        model="cube",
+                        texture=tex,
+                        color=color.white,
+                        position=(x, y, z),
+                        parent=ground_parent,
+                        origin_y=0.5,
+                    )
                 )
-
-    ground_parent.combine()
 
 
 texture_display = Entity(
@@ -115,7 +120,6 @@ highlight_border.position = texture_options_ui[0][0].position
 
 
 def handle_texture_selection(key):
-    global selected_texture
     if key.isdigit():
         index = int(key) - 1
         if 0 <= index < len(textures):
@@ -125,9 +129,26 @@ def handle_texture_selection(key):
 
 
 def input(key):
+    global selected_texture, creative_mode, last_space_press
+
     if key == "escape":
         application.quit()
         return
+
+    if key == "space":
+        now = time.time()
+        if now - last_space_press < 0.3:
+            creative_mode = not creative_mode
+            if creative_mode:
+                player.gravity = 0
+                player.jump_height = 0
+                player.flying_speed = 10
+            else:
+                player.gravity = 1
+                player.jump_height = 2
+            last_space_press = 0
+        else:
+            last_space_press = now
 
     handle_texture_selection(key)
 
@@ -158,6 +179,17 @@ def update():
     if player.y < -30:
         player.position = initial_position
         player.velocity = Vec3(0, 0, 0)
+
+    if creative_mode:
+        speed = player.flying_speed * time.dt
+        direction = Vec3(
+            int(held_keys["d"]) - int(held_keys["a"]),
+            int(held_keys["space"]) - int(held_keys["shift"]),
+            int(held_keys["w"]) - int(held_keys["s"]),
+        )
+        player.position += camera.forward * direction.z * speed
+        player.position += camera.right * direction.x * speed
+        player.position += Vec3(0, 1, 0) * direction.y * speed
 
 
 DirectionalLight().look_at(Vec3(1, -1, -1))
