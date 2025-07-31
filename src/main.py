@@ -1,5 +1,6 @@
 # type: ignore
 
+import random
 import time
 
 from perlin_noise import PerlinNoise
@@ -15,17 +16,19 @@ from ursina import (
     camera,
     color,
     destroy,
+    held_keys,
     load_texture,
     mouse,
     scene,
-    held_keys,
 )
 from ursina.prefabs.first_person_controller import FirstPersonController
+
+from block import Block
 
 app = Ursina(title="Minecraft-py")
 
 # Terrain config
-noise = PerlinNoise(octaves=4, seed=2025)
+
 terrain_width = 25
 terrain_depth = 25
 height_scale = 8
@@ -41,6 +44,7 @@ player.position = initial_position
 
 
 def generate_terrain():
+    noise = PerlinNoise(octaves=3, seed=random.randint(1, 1000))
     ground_parent = Entity()
 
     for z in range(terrain_depth):
@@ -48,32 +52,13 @@ def generate_terrain():
             surface_y = round(
                 noise([x / terrain_width, z / terrain_depth]) * height_scale
             )
+            # Superficie
+            boxes.append(Block((x, surface_y, z), "grass", scene))
 
-            top_block = Button(
-                model="cube",
-                texture=texture_map[textures[0]],
-                color=color.white,
-                position=(x, surface_y, z),
-                parent=scene,
-                origin_y=0.5,
-            )
-            boxes.append(top_block)
-
+            # Bloques debajo
             for y in range(surface_y - 1, -10, -1):
-                if y >= surface_y - 3:
-                    tex = texture_map[textures[4]]
-                else:
-                    tex = texture_map[textures[2]]
-
-                boxes.append(
-                    Entity(
-                        model="cube",
-                        texture=tex,
-                        position=(x, y, z),
-                        parent=ground_parent,
-                        origin_y=0.5,
-                    )
-                )
+                tex = "dirt" if y >= surface_y - 3 else "stone"
+                boxes.append(Block((x, y, z), tex, ground_parent))
 
 
 texture_display = Entity(
