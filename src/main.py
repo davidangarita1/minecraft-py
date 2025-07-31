@@ -26,8 +26,8 @@ app = Ursina(title="Minecraft-py")
 
 # Terrain config
 noise = PerlinNoise(octaves=4, seed=2025)
-terrain_width = 20
-terrain_depth = 20
+terrain_width = 25
+terrain_depth = 25
 height_scale = 8
 textures = ["grass.png", "glass.png", "stone.png", "iron_stone.png", "earth_bottom.png"]
 texture_map = {name: load_texture(f"textures/{name}") for name in textures}
@@ -35,6 +35,9 @@ selected_texture = textures[0]
 boxes = []
 creative_mode = False
 last_space_press = 0
+player = FirstPersonController()
+initial_position = (terrain_width // 2, height_scale + 5, terrain_depth // 2)
+player.position = initial_position
 
 
 def generate_terrain():
@@ -56,17 +59,16 @@ def generate_terrain():
             )
             boxes.append(top_block)
 
-            for y in range(surface_y - 1, -11, -1):
+            for y in range(surface_y - 1, -10, -1):
                 if y >= surface_y - 3:
                     tex = texture_map[textures[4]]
                 else:
                     tex = texture_map[textures[2]]
 
                 boxes.append(
-                    Button(
+                    Entity(
                         model="cube",
                         texture=tex,
-                        color=color.white,
                         position=(x, y, z),
                         parent=ground_parent,
                         origin_y=0.5,
@@ -168,11 +170,6 @@ def input(key):
             if key == "right mouse down":
                 boxes.remove(box)
                 destroy(box)
-
-
-player = FirstPersonController()
-initial_position = (terrain_width // 2, height_scale + 5, terrain_depth // 2)
-player.position = initial_position
 
 
 def update():
