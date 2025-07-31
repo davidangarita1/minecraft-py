@@ -23,27 +23,50 @@ app = Ursina(title="Minecraft-py")
 
 # Terrain config
 noise = PerlinNoise(octaves=4, seed=2025)
-terrain_width = 50
-terrain_depth = 50
+terrain_width = 20
+terrain_depth = 20
 height_scale = 8
 textures = ["grass.png", "glass.png", "stone.png", "iron_stone.png", "earth_bottom.png"]
+texture_map = {name: load_texture(f"textures/{name}") for name in textures}
 selected_texture = textures[0]
 boxes = []
 
 
 def generate_terrain():
+    ground_parent = Entity()
+
     for z in range(terrain_depth):
         for x in range(terrain_width):
-            y = round(noise([x / terrain_width, z / terrain_depth]) * height_scale)
-            box = Button(
+            surface_y = round(
+                noise([x / terrain_width, z / terrain_depth]) * height_scale
+            )
+
+            top_block = Button(
                 model="cube",
-                texture=load_texture(f"textures/{textures[0]}"),
+                texture=texture_map[textures[0]],
                 color=color.white,
-                position=(x, y, z),
+                position=(x, surface_y, z),
                 parent=scene,
                 origin_y=0.5,
             )
-            boxes.append(box)
+            boxes.append(top_block)
+
+            for y in range(surface_y - 1, -16, -1):
+                if y >= surface_y - 3:
+                    tex = texture_map[textures[4]]
+                else:
+                    tex = texture_map[textures[2]]
+
+                Entity(
+                    model="cube",
+                    texture=tex,
+                    position=(x, y, z),
+                    parent=ground_parent,
+                    origin_y=0.5,
+                    collider=None,
+                )
+
+    ground_parent.combine()
 
 
 texture_display = Entity(
