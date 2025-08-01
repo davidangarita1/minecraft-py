@@ -5,7 +5,6 @@ import time
 
 from perlin_noise import PerlinNoise
 from ursina import (
-    Button,
     DirectionalLight,
     Entity,
     Sky,
@@ -28,12 +27,11 @@ from block import Block
 app = Ursina(title="Minecraft-py")
 
 # Terrain config
-
 terrain_width = 25
 terrain_depth = 25
 height_scale = 8
-textures = ["grass.png", "glass.png", "stone.png", "iron_stone.png", "earth_bottom.png"]
-texture_map = {name: load_texture(f"textures/{name}") for name in textures}
+
+textures = ["grass", "stone"]
 selected_texture = textures[0]
 boxes = []
 creative_mode = False
@@ -46,7 +44,7 @@ player.position = initial_position
 def generate_terrain():
     noise = PerlinNoise(octaves=3, seed=random.randint(1, 1000))
     ground_parent = Entity()
-
+    min_height = -10
     for z in range(terrain_depth):
         for x in range(terrain_width):
             surface_y = round(
@@ -56,15 +54,18 @@ def generate_terrain():
             boxes.append(Block((x, surface_y, z), "grass", scene))
 
             # Bloques debajo
-            for y in range(surface_y - 1, -10, -1):
-                tex = "dirt" if y >= surface_y - 3 else "stone"
-                boxes.append(Block((x, y, z), tex, ground_parent))
+            for y in range(surface_y - 1, min_height, -1):
+                if y == min_height + 1:
+                    boxes.append(Block((x, y, z), "bedrock", ground_parent))
+                else:
+                    tex = "dirt" if y >= surface_y - 3 else "stone"
+                    boxes.append(Block((x, y, z), tex, ground_parent))
 
 
 texture_display = Entity(
     parent=camera.ui,
     model="quad",
-    texture=load_texture(f"textures/{selected_texture}"),
+    texture=load_texture(f"textures/{selected_texture}.png"),
     scale=(0.1, 0.1),
     position=(-0.83, 0.44),
 )
@@ -89,7 +90,7 @@ for i, texture_name in enumerate(textures):
     icon = Entity(
         parent=camera.ui,
         model="quad",
-        texture=load_texture(f"textures/{texture_name}"),
+        texture=load_texture(f"textures/{texture_name}.png"),
         scale=(0.08, 0.08),
         position=(x, -0.45),
     )
@@ -104,15 +105,6 @@ for i, texture_name in enumerate(textures):
     texture_options_ui.append((icon, number_label))
 
 highlight_border.position = texture_options_ui[0][0].position
-
-
-def handle_texture_selection(key):
-    if key.isdigit():
-        index = int(key) - 1
-        if 0 <= index < len(textures):
-            selected_texture = textures[index]
-            texture_display.texture = load_texture(f"textures/{selected_texture}")
-            highlight_border.position = texture_options_ui[index][0].position
 
 
 def input(key):
@@ -137,24 +129,24 @@ def input(key):
         else:
             last_space_press = now
 
-    handle_texture_selection(key)
+    if key.isdigit():
+        index = int(key) - 1
+        if 0 <= index < len(textures):
+            selected_texture = textures[index]
+            texture_display.texture = selected_texture
+            highlight_border.position = texture_options_ui[index][0].position
 
     for box in boxes:
         if box.hovered:
             if key == "left mouse down":
-                new_cube = Button(
-                    color=color.white,
-                    model="cube",
-                    position=box.position + mouse.normal,
-                    texture=load_texture(f"textures/{selected_texture}"),
-                    parent=scene,
-                    origin_y=0.5,
+                boxes.append(
+                    Block(box.position + mouse.normal, selected_texture, scene)
                 )
-                boxes.append(new_cube)
 
             if key == "right mouse down":
-                boxes.remove(box)
-                destroy(box)
+                if not mouse.hovered_entity.block_type == "bedrock":
+                    boxes.remove(box)
+                    destroy(box)
 
 
 def update():
