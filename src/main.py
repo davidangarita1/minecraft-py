@@ -33,7 +33,6 @@ height_scale = 8
 
 textures = ["grass", "stone"]
 selected_texture = textures[0]
-boxes = []
 creative_mode = False
 last_space_press = 0
 player = FirstPersonController()
@@ -45,21 +44,22 @@ def generate_terrain():
     noise = PerlinNoise(octaves=3, seed=random.randint(1, 1000))
     ground_parent = Entity()
     min_height = -10
+    
     for z in range(terrain_depth):
         for x in range(terrain_width):
             surface_y = round(
                 noise([x / terrain_width, z / terrain_depth]) * height_scale
             )
             # Superficie
-            boxes.append(Block((x, surface_y, z), "grass", scene))
+            Block((x, surface_y, z), "grass", scene)
 
             # Bloques debajo
             for y in range(surface_y - 1, min_height, -1):
                 if y == min_height + 1:
-                    boxes.append(Block((x, y, z), "bedrock", ground_parent))
+                    Block((x, y, z), "bedrock", ground_parent)
                 else:
                     tex = "dirt" if y >= surface_y - 3 else "stone"
-                    boxes.append(Block((x, y, z), tex, ground_parent))
+                    Block((x, y, z), tex, ground_parent)
 
 
 texture_display = Entity(
@@ -136,17 +136,14 @@ def input(key):
             texture_display.texture = selected_texture
             highlight_border.position = texture_options_ui[index][0].position
 
-    for box in boxes:
-        if box.hovered:
-            if key == "left mouse down":
-                boxes.append(
-                    Block(box.position + mouse.normal, selected_texture, scene)
-                )
+    hovered = mouse.hovered_entity
+    if hovered and isinstance(hovered, Block):
+        if key == "left mouse down":
+            Block(hovered.position + mouse.normal, selected_texture, scene)
 
-            if key == "right mouse down":
-                if not mouse.hovered_entity.block_type == "bedrock":
-                    boxes.remove(box)
-                    destroy(box)
+        if key == "right mouse down":
+            if not mouse.hovered_entity.block_type == "bedrock":
+                destroy(hovered)
 
 
 def update():
