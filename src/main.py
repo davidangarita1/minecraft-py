@@ -11,7 +11,6 @@ from ursina import (
     Text,
     Ursina,
     Vec3,
-    application,
     camera,
     color,
     destroy,
@@ -23,44 +22,74 @@ from ursina import (
 from ursina.prefabs.first_person_controller import FirstPersonController
 
 from block import Block
+from chunk import NEIGHBORS
+from pause_menu import PauseMenu
 
 app = Ursina(title="Minecraft-py")
+mouse.update_step = 4
 
-# Terrain config
-terrain_width = 25
-terrain_depth = 25
-height_scale = 8
+TERRAIN_WIDTH = 30
+TERRAIN_DEPTH = 30
+HEIGHT_SCALE = 8
+MIN_HEIGHT = -10
 
 textures = ["grass", "stone"]
 selected_texture = textures[0]
 creative_mode = False
 last_space_press = 0
-player = FirstPersonController()
-initial_position = (terrain_width // 2, height_scale + 5, terrain_depth // 2)
-player.position = initial_position
+world_blocks = {}
+block_entities = {}
+
+
+def build_world_data():
+    noise = PerlinNoise(octaves=3, seed=random.randint(1, 1000))
+
+    for z in range(TERRAIN_DEPTH):
+        for x in range(TERRAIN_WIDTH):
+            surface_y = round(
+                noise([x / TERRAIN_WIDTH, z / TERRAIN_DEPTH]) * HEIGHT_SCALE
+            )
+            world_blocks[(x, surface_y, z)] = "grass"
+            for y in range(surface_y - 1, MIN_HEIGHT, -1):
+                if y == MIN_HEIGHT + 1:
+                    world_blocks[(x, y, z)] = "bedrock"
+                else:
+                    world_blocks[(x, y, z)] = "dirt" if y >= surface_y - 3 else "stone"
+
+
+def create_visible_blocks():
+    for (x, y, z), block_type in world_blocks.items():
+        if is_exposed(x, y, z):
+            block = Block((x, y, z), block_type, scene)
+            block_entities[(x, y, z)] = block
+
+
+def is_exposed(x, y, z):
+    for dx, dy, dz in NEIGHBORS:
+        if (x + dx, y + dy, z + dz) not in world_blocks:
+            return True
+    return False
+
+
+def expose_neighbors(x, y, z):
+    for dx, dy, dz in NEIGHBORS:
+        nx, ny, nz = x + dx, y + dy, z + dz
+        if (nx, ny, nz) in world_blocks and (nx, ny, nz) not in block_entities:
+            if is_exposed(nx, ny, nz):
+                block = Block((nx, ny, nz), world_blocks[(nx, ny, nz)], scene)
+                block_entities[(nx, ny, nz)] = block
 
 
 def generate_terrain():
-    noise = PerlinNoise(octaves=3, seed=random.randint(1, 1000))
-    ground_parent = Entity()
-    min_height = -10
-    
-    for z in range(terrain_depth):
-        for x in range(terrain_width):
-            surface_y = round(
-                noise([x / terrain_width, z / terrain_depth]) * height_scale
-            )
-            # Superficie
-            Block((x, surface_y, z), "grass", scene)
+    build_world_data()
+    create_visible_blocks()
 
-            # Bloques debajo
-            for y in range(surface_y - 1, min_height, -1):
-                if y == min_height + 1:
-                    Block((x, y, z), "bedrock", ground_parent)
-                else:
-                    tex = "dirt" if y >= surface_y - 3 else "stone"
-                    Block((x, y, z), tex, ground_parent)
 
+player = FirstPersonController()
+initial_position = (TERRAIN_WIDTH // 2, HEIGHT_SCALE + 5, TERRAIN_DEPTH // 2)
+player.position = initial_position
+
+pause_menu = PauseMenu()
 
 texture_display = Entity(
     parent=camera.ui,
@@ -69,7 +98,6 @@ texture_display = Entity(
     scale=(0.1, 0.1),
     position=(-0.83, 0.44),
 )
-
 
 highlight_border = Entity(
     parent=camera.ui,
@@ -81,7 +109,6 @@ highlight_border = Entity(
     z=-0.5,
 )
 
-# Texture Options
 texture_options_ui = []
 spacing = 0.13
 start_x = -((len(textures) - 1) * spacing) / 2
@@ -110,18 +137,13 @@ highlight_border.position = texture_options_ui[0][0].position
 def input(key):
     global selected_texture, creative_mode, last_space_press
 
-    if key == "escape":
-        application.quit()
-        return
-
-    if key == "space":
+    if key == 'space':
         now = time.time()
         if now - last_space_press < 0.3:
             creative_mode = not creative_mode
             if creative_mode:
                 player.gravity = 0
                 player.jump_height = 0
-                player.flying_speed = 10
             else:
                 player.gravity = 1
                 player.jump_height = 2
@@ -138,12 +160,22 @@ def input(key):
 
     hovered = mouse.hovered_entity
     if hovered and isinstance(hovered, Block):
-        if key == "left mouse down":
-            Block(hovered.position + mouse.normal, selected_texture, scene)
+        if key == 'left mouse down':
+            new_pos = hovered.position + mouse.normal
+            pos_key = (int(new_pos.x), int(new_pos.y), int(new_pos.z))
+            if pos_key not in world_blocks:
+                world_blocks[pos_key] = selected_texture
+                block = Block(new_pos, selected_texture, scene)
+                block_entities[pos_key] = block
 
-        if key == "right mouse down":
-            if not mouse.hovered_entity.block_type == "bedrock":
+        if key == 'right mouse down':
+            if hovered.block_type != 'bedrock':
+                pos = hovered.position
+                pos_key = (int(pos.x), int(pos.y), int(pos.z))
+                world_blocks.pop(pos_key, None)
+                block_entities.pop(pos_key, None)
                 destroy(hovered)
+                expose_neighbors(*pos_key)
 
 
 def update():
@@ -152,11 +184,11 @@ def update():
         player.velocity = Vec3(0, 0, 0)
 
     if creative_mode:
-        speed = player.flying_speed * time.dt
+        speed = 10 * time.dt
         direction = Vec3(
-            int(held_keys["d"]) - int(held_keys["a"]),
-            int(held_keys["space"]) - int(held_keys["shift"]),
-            int(held_keys["w"]) - int(held_keys["s"]),
+            int(held_keys['d']) - int(held_keys['a']),
+            int(held_keys['space']) - int(held_keys['shift']),
+            int(held_keys['w']) - int(held_keys['s']),
         )
         player.position += camera.forward * direction.z * speed
         player.position += camera.right * direction.x * speed
