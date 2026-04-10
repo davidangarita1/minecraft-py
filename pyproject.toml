@@ -1,7 +1,7 @@
 [project]
 name = "minecraft-py"
 version = "0.1.0"
-description = "Add your description here"
+description = "Minecraft-inspired 3D voxel game built with Python and Ursina engine. Procedurally generated terrain, block placement/destruction, creative flight mode, and first-person exploration."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
