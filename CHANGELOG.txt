@@ -1,0 +1,17 @@
+0.1.0
+- Feat: Procedural terrain generation using Perlin noise
+- Feat: 9 block types — grass, dirt, stone, snow, ice, lava, brick, gravel, cobblestone
+- Feat: Block placement and destruction with left/right click
+- Feat: Creative mode with flight enabled by double-tap Space
+- Feat: First-person controller with gravity, jump, and walkable terrain
+- Feat: Pause menu with Resume and Exit options (ESC key)
+- Feat: Hotbar UI with 9 slots displaying block preview and numeric labels
+- Feat: Isometric block preview in hotbar slots with texture crop (x: 318, y: 300, 300 × 300 px)
+- Feat: Neighbor exposure system — hidden blocks reveal when adjacent blocks are destroyed
+- Fix: Face-culling optimization — only exposed block faces rendered as entities (~80% entity reduction)
+- Docs: Complete README with controls, features, architecture, and branch protection rules
+- Docs: CHANGELOG.txt with initial 0.1.0 release notes
+- Chore: Python 3.12+ project setup with uv package manager
+- Chore: GitHub branch protection on main and develop branches
+- Chore: Repository set to public with conventional commit enforcement
+- Chore: Custom agent "Good Code" for code quality reviews
