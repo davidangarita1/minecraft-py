@@ -1,7 +1,9 @@
 # type: ignore
 
+import __main__
 import random
 import time
+from pathlib import Path
 
 from perlin_noise import PerlinNoise
 from ursina import (
@@ -9,6 +11,7 @@ from ursina import (
     Sky,
     Ursina,
     Vec3,
+    application,
     camera,
     destroy,
     held_keys,
@@ -17,29 +20,29 @@ from ursina import (
 )
 from ursina.prefabs.first_person_controller import FirstPersonController
 
-from block import Block, block_textures
-from chunk import NEIGHBORS
+from block import Block, block_textures, load_block_textures
+from world_chunk import NEIGHBORS
 from hotbar import Hotbar
 from pause_menu import PauseMenu
+from title_menu import TitleMenu
 
-app = Ursina(title="Minecraft-py")
-mouse.update_step = 4
+SOURCE_DIRECTORY = Path(__file__).parent
 
 TERRAIN_WIDTH = 30
 TERRAIN_DEPTH = 30
 HEIGHT_SCALE = 8
 MIN_HEIGHT = -10
 
-HOTBAR_SLOTS = [
-    ("grass",       block_textures["grass"]),
-    ("dirt",        block_textures["dirt"]),
-    ("stone",       block_textures["stone"]),
-    ("snow",        block_textures["snow"]),
-    ("ice",         block_textures["ice"]),
-    ("lava",        block_textures["lava"]),
-    ("brick",       block_textures["brick"]),
-    ("gravel",      block_textures["gravel"]),
-    ("cobblestone", block_textures["cobblestone"]),
+HOTBAR_BLOCK_TYPES = [
+    "grass",
+    "dirt",
+    "stone",
+    "snow",
+    "ice",
+    "lava",
+    "brick",
+    "gravel",
+    "cobblestone",
 ]
 
 creative_mode = False
@@ -92,16 +95,19 @@ def generate_terrain():
     create_visible_blocks()
 
 
-player = FirstPersonController()
-initial_position = (TERRAIN_WIDTH // 2, HEIGHT_SCALE + 5, TERRAIN_DEPTH // 2)
-player.position = initial_position
-
-pause_menu = PauseMenu()
-hotbar = Hotbar(HOTBAR_SLOTS)
+player = None
+initial_position = None
+pause_menu = None
+hotbar = None
+directional_light = None
+sky_entity = None
 
 
 def input(key):
     global creative_mode, last_space_press
+
+    if not player:
+        return
 
     if key == 'space':
         now = time.time()
@@ -141,6 +147,9 @@ def input(key):
 
 
 def update():
+    if not player:
+        return
+
     if player.y < -30:
         player.position = initial_position
         player.velocity = Vec3(0, 0, 0)
@@ -157,7 +166,81 @@ def update():
         player.position += Vec3(0, 1, 0) * direction.y * speed
 
 
-DirectionalLight().look_at(Vec3(1, -1, -1))
-generate_terrain()
-Sky(texture="sky.png")
-app.run()
+def main():
+    global player, initial_position, pause_menu, hotbar
+
+    _configure_asset_folder()
+
+    app = Ursina(title="Minecraft-py")
+    mouse.update_step = 4
+
+    load_block_textures()
+
+    TitleMenu(on_play=_start_gameplay)
+
+    app.run()
+
+
+def _start_gameplay():
+    global player, initial_position, pause_menu, hotbar, directional_light, sky_entity
+
+    hotbar_slots = [(name, block_textures[name]) for name in HOTBAR_BLOCK_TYPES]
+
+    player = FirstPersonController()
+    initial_position = (TERRAIN_WIDTH // 2, HEIGHT_SCALE + 5, TERRAIN_DEPTH // 2)
+    player.position = initial_position
+
+    pause_menu = PauseMenu(on_quit_to_title=_quit_to_title)
+    hotbar = Hotbar(hotbar_slots)
+
+    __main__.input = input
+    __main__.update = update
+
+    directional_light = DirectionalLight()
+    directional_light.look_at(Vec3(1, -1, -1))
+    generate_terrain()
+    sky_entity = Sky(texture="sky.png")
+    mouse.locked = True
+
+
+def _quit_to_title():
+    global player, initial_position, pause_menu, hotbar, directional_light, sky_entity
+    global world_blocks, block_entities, creative_mode, last_space_press
+
+    for block in list(block_entities.values()):
+        destroy(block)
+
+    block_entities.clear()
+    world_blocks.clear()
+
+    for entity in (player, hotbar, pause_menu, directional_light, sky_entity):
+        if entity:
+            destroy(entity)
+
+    player = None
+    initial_position = None
+    pause_menu = None
+    hotbar = None
+    directional_light = None
+    sky_entity = None
+    creative_mode = False
+    last_space_press = 0
+
+    mouse.locked = False
+    TitleMenu(on_play=_start_gameplay)
+
+
+def _configure_asset_folder():
+    from panda3d.core import getModelPath
+
+    application.asset_folder = SOURCE_DIRECTORY
+    application.models_compressed_folder = SOURCE_DIRECTORY / "models_compressed/"
+    application.fonts_folder = SOURCE_DIRECTORY / "assets" / "fonts/"
+
+    model_path = getModelPath()
+    model_path.append_path(str(SOURCE_DIRECTORY.resolve()))
+    model_path.append_path(str((SOURCE_DIRECTORY / "assets" / "fonts").resolve()))
+
+
+if __name__ == "__main__":
+    main()
