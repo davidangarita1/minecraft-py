@@ -4,7 +4,6 @@ from ursina import (
     Button,
     Entity,
     Text,
-    application,
     camera,
     color,
     mouse,
@@ -12,12 +11,13 @@ from ursina import (
 
 
 class PauseMenu(Entity):
-    def __init__(self, **kwargs):
+    def __init__(self, on_quit_to_title, **kwargs):
         super().__init__(
             parent=camera.ui,
             ignore_paused=True,
             z=-10,
         )
+        self._on_quit_to_title = on_quit_to_title
         self.is_open = False
         self.menu_parent = Entity(parent=self, enabled=False)
 
@@ -52,18 +52,22 @@ class PauseMenu(Entity):
 
         Button(
             parent=self.menu_parent,
-            text='Exit',
+            text='Quit to Title',
             scale=(0.3, 0.07),
             y=-0.1,
             color=color.rgba(0.2, 0.2, 0.2, 0.8),
             highlight_color=color.rgba(0.5, 0.25, 0.25, 0.85),
             pressed_color=color.rgba(0.4, 0.15, 0.15, 0.85),
-            on_click=application.quit,
+            on_click=self._quit_to_title,
             ignore_paused=True,
         )
 
         for key, value in kwargs.items():
             setattr(self, key, value)
+
+    def _quit_to_title(self):
+        self.resume()
+        self._on_quit_to_title()
 
     def toggle(self):
         if self.is_open:

@@ -99,6 +99,8 @@ player = None
 initial_position = None
 pause_menu = None
 hotbar = None
+directional_light = None
+sky_entity = None
 
 
 def input(key):
@@ -180,7 +182,7 @@ def main():
 
 
 def _start_gameplay():
-    global player, initial_position, pause_menu, hotbar
+    global player, initial_position, pause_menu, hotbar, directional_light, sky_entity
 
     hotbar_slots = [(name, block_textures[name]) for name in HOTBAR_BLOCK_TYPES]
 
@@ -188,16 +190,44 @@ def _start_gameplay():
     initial_position = (TERRAIN_WIDTH // 2, HEIGHT_SCALE + 5, TERRAIN_DEPTH // 2)
     player.position = initial_position
 
-    pause_menu = PauseMenu()
+    pause_menu = PauseMenu(on_quit_to_title=_quit_to_title)
     hotbar = Hotbar(hotbar_slots)
 
     __main__.input = input
     __main__.update = update
 
-    DirectionalLight().look_at(Vec3(1, -1, -1))
+    directional_light = DirectionalLight()
+    directional_light.look_at(Vec3(1, -1, -1))
     generate_terrain()
-    Sky(texture="sky.png")
+    sky_entity = Sky(texture="sky.png")
     mouse.locked = True
+
+
+def _quit_to_title():
+    global player, initial_position, pause_menu, hotbar, directional_light, sky_entity
+    global world_blocks, block_entities, creative_mode, last_space_press
+
+    for block in list(block_entities.values()):
+        destroy(block)
+
+    block_entities.clear()
+    world_blocks.clear()
+
+    for entity in (player, hotbar, pause_menu, directional_light, sky_entity):
+        if entity:
+            destroy(entity)
+
+    player = None
+    initial_position = None
+    pause_menu = None
+    hotbar = None
+    directional_light = None
+    sky_entity = None
+    creative_mode = False
+    last_space_press = 0
+
+    mouse.locked = False
+    TitleMenu(on_play=_start_gameplay)
 
 
 def _configure_asset_folder():
