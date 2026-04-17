@@ -18,7 +18,7 @@ uv sync
 ## Run
 
 ```bash
-uv run python src/main.py
+uv run start
 ```
 
 ## Controls
@@ -52,7 +52,7 @@ uv run python src/main.py
 src/
 ├── main.py         # Entry point, terrain generation, input handling
 ├── block.py        # Block entity definition and texture registry
-├── chunk.py        # Neighbor directions constant (NEIGHBORS)
+├── world_chunk.py  # Neighbor directions constant (NEIGHBORS)
 ├── hotbar.py       # Hotbar UI with slot selection and block preview
 └── pause_menu.py   # ESC pause menu with Resume / Exit
 docs/
