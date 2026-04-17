@@ -1,5 +1,6 @@
 # type: ignore
 
+import __main__
 import random
 import time
 from pathlib import Path
@@ -174,6 +175,9 @@ def main():
 
     pause_menu = PauseMenu()
     hotbar = Hotbar(hotbar_slots)
+
+    __main__.input = input
+    __main__.update = update
 
     DirectionalLight().look_at(Vec3(1, -1, -1))
     generate_terrain()
