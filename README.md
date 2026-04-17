@@ -1,6 +1,6 @@
 # minecraft-py
 
-A Minecraft-inspired 3D voxel game built with Python and the [Ursina](https://www.ursinaengine.org/) game engine. Explore procedurally generated terrain, place and destroy blocks, and switch between survival and creative flight modes.
+A Minecraft-inspired 3D voxel game built with Python and the [Ursina](https://www.ursinaengine.org/) game engine. Start from a Minecraft-style title screen, explore procedurally generated terrain, place and destroy blocks, and switch between survival and creative flight modes.
 
 ![Demo](docs/images/demo.png)
 
@@ -37,14 +37,14 @@ uv run start
 
 ## Features
 
+- Minecraft-style title screen on startup with Play, Settings, and Exit buttons
 - Procedural terrain generation using Perlin noise
 - 9 block types: grass, dirt, stone, snow, ice, lava, brick, gravel, cobblestone
 - Isometric block preview in the hotbar
 - Face-culling optimization — only exposed block faces are rendered as entities
 - Neighbor exposure system — when a block is removed, hidden adjacent blocks are automatically revealed
 - Creative mode (fly) with double-tap Space
-- Pause menu with Resume and Exit options
-- First-person controller with gravity and jump
+- Pause menu with Resume and Quit to Title options
 
 ## Project Structure
 
@@ -54,13 +54,24 @@ src/
 ├── block.py        # Block entity definition and texture registry
 ├── world_chunk.py  # Neighbor directions constant (NEIGHBORS)
 ├── hotbar.py       # Hotbar UI with slot selection and block preview
-└── pause_menu.py   # ESC pause menu with Resume / Exit
+├── pause_menu.py   # ESC pause menu with Resume / Quit to Title
+├── title_menu.py   # Startup title screen with Minecraft-style UI
+└── assets/
+    └── fonts/
+        └── Monocraft.otf   # Minecraft-style font (OFL license)
 docs/
+├── features/
+│   └── menu-title.feature.md   # EPIC with user stories for title menu
 └── images/
-    └── demo.png    # Gameplay screenshot
+    ├── demo.png        # Gameplay screenshot
+    └── title-bg.png    # Title screen background
 ```
 
 ## Architecture
+
+### Title screen
+
+`TitleMenu` is shown at startup before gameplay begins. It renders a blurred background image, the game title in Monocraft font, and three buttons: Play, Settings (disabled), and Exit. Clicking Play tears down the menu and initializes the game world. Clicking "Quit to Title" from the pause menu destroys all world entities and returns to the title screen, freeing memory.
 
 ### Face culling
 
@@ -72,7 +83,7 @@ All block data is stored in a flat `world_blocks` dict before any entities are c
 
 ### Pause menu
 
-`PauseMenu` is always enabled as an Ursina `Entity` so its `input()` method fires with `ignore_paused=True`. Only the visual `menu_parent` container toggles visibility, keeping ESC functional both in-game and while paused.
+`PauseMenu` is always enabled as an Ursina `Entity` so its `input()` method fires with `ignore_paused=True`. Only the visual `menu_parent` container toggles visibility, keeping ESC functional both in-game and while paused. "Quit to Title" destroys all gameplay entities and resets all state before reopening the title screen.
 
 ## Branch protection
 
