@@ -24,6 +24,7 @@ from block import Block, block_textures, load_block_textures
 from world_chunk import NEIGHBORS
 from hotbar import Hotbar
 from pause_menu import PauseMenu
+from title_menu import TitleMenu
 
 SOURCE_DIRECTORY = Path(__file__).parent
 
@@ -103,6 +104,9 @@ hotbar = None
 def input(key):
     global creative_mode, last_space_press
 
+    if not player:
+        return
+
     if key == 'space':
         now = time.time()
         if now - last_space_press < 0.3:
@@ -141,6 +145,9 @@ def input(key):
 
 
 def update():
+    if not player:
+        return
+
     if player.y < -30:
         player.position = initial_position
         player.velocity = Vec3(0, 0, 0)
@@ -167,6 +174,14 @@ def main():
 
     load_block_textures()
 
+    TitleMenu(on_play=_start_gameplay)
+
+    app.run()
+
+
+def _start_gameplay():
+    global player, initial_position, pause_menu, hotbar
+
     hotbar_slots = [(name, block_textures[name]) for name in HOTBAR_BLOCK_TYPES]
 
     player = FirstPersonController()
@@ -182,7 +197,7 @@ def main():
     DirectionalLight().look_at(Vec3(1, -1, -1))
     generate_terrain()
     Sky(texture="sky.png")
-    app.run()
+    mouse.locked = True
 
 
 def _configure_asset_folder():
@@ -190,9 +205,11 @@ def _configure_asset_folder():
 
     application.asset_folder = SOURCE_DIRECTORY
     application.models_compressed_folder = SOURCE_DIRECTORY / "models_compressed/"
+    application.fonts_folder = SOURCE_DIRECTORY / "assets" / "fonts/"
 
     model_path = getModelPath()
     model_path.append_path(str(SOURCE_DIRECTORY.resolve()))
+    model_path.append_path(str((SOURCE_DIRECTORY / "assets" / "fonts").resolve()))
 
 
 if __name__ == "__main__":
