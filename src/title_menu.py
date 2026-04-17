@@ -14,7 +14,6 @@ from ursina import (
 )
 
 _FONT = "Monocraft.otf"
-_BACKGROUND_IMAGE = "docs/images/title-bg.png"
 
 _TITLE_TEXT = "MINECRAFT-PY"
 _TITLE_SCALE = 5
@@ -55,8 +54,8 @@ class TitleMenu(Entity):
 
     def _build_background(self):
         source_directory = Path(__file__).parent
-        background_path = source_directory.parent / _BACKGROUND_IMAGE
-        background_texture = load_texture(str(background_path))
+        background_folder = source_directory.parent / "docs" / "images"
+        background_texture = load_texture("title-bg.png", folder=background_folder)
 
         Entity(
             parent=self,
