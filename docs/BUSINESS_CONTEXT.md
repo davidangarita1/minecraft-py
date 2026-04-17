@@ -14,6 +14,10 @@ A simple, self-contained block-building game that requires no account, no launch
 
 ## Key Capabilities
 
+### Title Screen
+
+When the game launches, players are greeted with a title screen that displays the game name in a large, stylized block font over a scenic background image. From here, players can start a new session by pressing Play, or close the application with Exit. A Settings button is also present for future use. The world is not created until the player chooses to begin, keeping startup fast and giving players a clear entry point into the experience.
+
 ### World Generation
 
 Every game session produces a unique landscape. The terrain includes surface layers, underground layers, and a solid foundation at the bottom that cannot be removed. This ensures every playthrough feels different while maintaining a consistent structure.
@@ -41,6 +45,9 @@ The game can be paused at any time, presenting options to resume play or exit th
 
 | Action                | Result                                      |
 | --------------------- | ------------------------------------------- |
+| Launch the game        | View the title screen with Play, Settings, and Exit options |
+| Click Play             | Start a new session and enter the world     |
+| Click Exit (title)     | Close the application from the title screen |
 | Move around            | Navigate the world on foot                  |
 | Jump                   | Leap over single-block obstacles            |
 | Toggle flight          | Switch between walking and free flight      |
