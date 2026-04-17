@@ -4,6 +4,7 @@ from ursina import (
     Button,
     Entity,
     Text,
+    application,
     camera,
     color,
     mouse,
