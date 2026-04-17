@@ -23,17 +23,17 @@ uv run start
 
 ## Controls
 
-| Key | Action |
-|-----|--------|
-| `W A S D` | Move |
-| `Space` | Jump |
+| Key            | Action                     |
+| -------------- | -------------------------- |
+| `W A S D`      | Move                       |
+| `Space`        | Jump                       |
 | `Double Space` | Toggle creative mode (fly) |
-| `Shift` | Descend (creative mode) |
-| `Left Click` | Place block |
-| `Right Click` | Destroy block |
-| `1` – `9` | Select hotbar slot |
-| `Scroll Wheel` | Cycle hotbar slots |
-| `Esc` | Pause / Resume |
+| `Shift`        | Descend (creative mode)    |
+| `Left Click`   | Place block                |
+| `Right Click`  | Destroy block              |
+| `1` – `9`      | Select hotbar slot         |
+| `Scroll Wheel` | Cycle hotbar slots         |
+| `Esc`          | Pause / Resume             |
 
 ## Features
 
@@ -48,7 +48,7 @@ uv run start
 
 ## Project Structure
 
-```
+```sh
 src/
 ├── main.py         # Entry point, terrain generation, input handling
 ├── block.py        # Block entity definition and texture registry
@@ -76,9 +76,9 @@ All block data is stored in a flat `world_blocks` dict before any entities are c
 
 ## Branch protection
 
-| Branch | Rule |
-|--------|------|
-| `main` | PR required · 1 approval · all checks must pass |
+| Branch    | Rule                                            |
+| --------- | ----------------------------------------------- |
+| `main`    | PR required · 1 approval · all checks must pass |
 | `develop` | PR required · 1 approval · all checks must pass |
 
 Direct pushes to `main` or `develop` are blocked. Force pushes and branch deletion are disabled.
@@ -86,4 +86,3 @@ Direct pushes to `main` or `develop` are blocked. Force pushes and branch deleti
 ## License
 
 MIT
-
