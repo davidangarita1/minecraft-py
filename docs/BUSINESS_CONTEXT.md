@@ -43,19 +43,19 @@ The game can be paused at any time, presenting options to resume play or exit th
 
 ## User Interactions Summary
 
-| Action                | Result                                      |
-| --------------------- | ------------------------------------------- |
-| Launch the game        | View the title screen with Play, Settings, and Exit options |
-| Click Play             | Start a new session and enter the world     |
-| Click Exit (title)     | Close the application from the title screen |
-| Move around            | Navigate the world on foot                  |
-| Jump                   | Leap over single-block obstacles            |
-| Toggle flight          | Switch between walking and free flight      |
-| Place a block          | Add a block of the selected type to a surface |
-| Remove a block         | Destroy an existing block from the world    |
-| Select toolbar slot    | Choose which block type to place            |
-| Pause / Resume         | Freeze or continue the game session         |
-| Exit                   | Close the application                       |
+| Action              | Result                                                      |
+| ------------------- | ----------------------------------------------------------- |
+| Launch the game     | View the title screen with Play, Settings, and Exit options |
+| Click Play          | Start a new session and enter the world                     |
+| Click Exit (title)  | Close the application from the title screen                 |
+| Move around         | Navigate the world on foot                                  |
+| Jump                | Leap over single-block obstacles                            |
+| Toggle flight       | Switch between walking and free flight                      |
+| Place a block       | Add a block of the selected type to a surface               |
+| Remove a block      | Destroy an existing block from the world                    |
+| Select toolbar slot | Choose which block type to place                            |
+| Pause / Resume      | Freeze or continue the game session                         |
+| Exit                | Close the application                                       |
 
 ## Performance Considerations
 
