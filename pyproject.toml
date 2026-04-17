@@ -9,5 +9,8 @@ dependencies = [
     "ursina>=8.0.1",
 ]
 
+[project.scripts]
+start = "main:main"
+
 [tool.uv]
 package = true

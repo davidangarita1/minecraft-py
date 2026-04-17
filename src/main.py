@@ -18,12 +18,9 @@ from ursina import (
 from ursina.prefabs.first_person_controller import FirstPersonController
 
 from block import Block, block_textures
-from chunk import NEIGHBORS
+from world_chunk import NEIGHBORS
 from hotbar import Hotbar
 from pause_menu import PauseMenu
-
-app = Ursina(title="Minecraft-py")
-mouse.update_step = 4
 
 TERRAIN_WIDTH = 30
 TERRAIN_DEPTH = 30
@@ -92,12 +89,10 @@ def generate_terrain():
     create_visible_blocks()
 
 
-player = FirstPersonController()
-initial_position = (TERRAIN_WIDTH // 2, HEIGHT_SCALE + 5, TERRAIN_DEPTH // 2)
-player.position = initial_position
-
-pause_menu = PauseMenu()
-hotbar = Hotbar(HOTBAR_SLOTS)
+player = None
+initial_position = None
+pause_menu = None
+hotbar = None
 
 
 def input(key):
@@ -157,7 +152,24 @@ def update():
         player.position += Vec3(0, 1, 0) * direction.y * speed
 
 
-DirectionalLight().look_at(Vec3(1, -1, -1))
-generate_terrain()
-Sky(texture="sky.png")
-app.run()
+def main():
+    global player, initial_position, pause_menu, hotbar
+
+    app = Ursina(title="Minecraft-py")
+    mouse.update_step = 4
+
+    player = FirstPersonController()
+    initial_position = (TERRAIN_WIDTH // 2, HEIGHT_SCALE + 5, TERRAIN_DEPTH // 2)
+    player.position = initial_position
+
+    pause_menu = PauseMenu()
+    hotbar = Hotbar(HOTBAR_SLOTS)
+
+    DirectionalLight().look_at(Vec3(1, -1, -1))
+    generate_terrain()
+    Sky(texture="sky.png")
+    app.run()
+
+
+if __name__ == "__main__":
+    main()
