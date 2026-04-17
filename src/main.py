@@ -2,6 +2,7 @@
 
 import random
 import time
+from pathlib import Path
 
 from perlin_noise import PerlinNoise
 from ursina import (
@@ -9,6 +10,7 @@ from ursina import (
     Sky,
     Ursina,
     Vec3,
+    application,
     camera,
     destroy,
     held_keys,
@@ -17,26 +19,28 @@ from ursina import (
 )
 from ursina.prefabs.first_person_controller import FirstPersonController
 
-from block import Block, block_textures
+from block import Block, block_textures, load_block_textures
 from world_chunk import NEIGHBORS
 from hotbar import Hotbar
 from pause_menu import PauseMenu
+
+SOURCE_DIRECTORY = Path(__file__).parent
 
 TERRAIN_WIDTH = 30
 TERRAIN_DEPTH = 30
 HEIGHT_SCALE = 8
 MIN_HEIGHT = -10
 
-HOTBAR_SLOTS = [
-    ("grass",       block_textures["grass"]),
-    ("dirt",        block_textures["dirt"]),
-    ("stone",       block_textures["stone"]),
-    ("snow",        block_textures["snow"]),
-    ("ice",         block_textures["ice"]),
-    ("lava",        block_textures["lava"]),
-    ("brick",       block_textures["brick"]),
-    ("gravel",      block_textures["gravel"]),
-    ("cobblestone", block_textures["cobblestone"]),
+HOTBAR_BLOCK_TYPES = [
+    "grass",
+    "dirt",
+    "stone",
+    "snow",
+    "ice",
+    "lava",
+    "brick",
+    "gravel",
+    "cobblestone",
 ]
 
 creative_mode = False
@@ -155,20 +159,36 @@ def update():
 def main():
     global player, initial_position, pause_menu, hotbar
 
+    _configure_asset_folder()
+
     app = Ursina(title="Minecraft-py")
     mouse.update_step = 4
+
+    load_block_textures()
+
+    hotbar_slots = [(name, block_textures[name]) for name in HOTBAR_BLOCK_TYPES]
 
     player = FirstPersonController()
     initial_position = (TERRAIN_WIDTH // 2, HEIGHT_SCALE + 5, TERRAIN_DEPTH // 2)
     player.position = initial_position
 
     pause_menu = PauseMenu()
-    hotbar = Hotbar(HOTBAR_SLOTS)
+    hotbar = Hotbar(hotbar_slots)
 
     DirectionalLight().look_at(Vec3(1, -1, -1))
     generate_terrain()
     Sky(texture="sky.png")
     app.run()
+
+
+def _configure_asset_folder():
+    from panda3d.core import getModelPath
+
+    application.asset_folder = SOURCE_DIRECTORY
+    application.models_compressed_folder = SOURCE_DIRECTORY / "models_compressed/"
+
+    model_path = getModelPath()
+    model_path.append_path(str(SOURCE_DIRECTORY.resolve()))
 
 
 if __name__ == "__main__":
